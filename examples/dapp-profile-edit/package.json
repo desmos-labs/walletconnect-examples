@@ -2,7 +2,7 @@
   "name": "desmos-profile-edit-example",
   "version": "0.0.0",
   "scripts": {
-    "start": "GENERATE_SOURCEMAP=false react-app-rewired start",
+    "start": "PORT=3000 GENERATE_SOURCEMAP=false react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"

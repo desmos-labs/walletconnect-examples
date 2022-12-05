@@ -29,7 +29,7 @@ export default function Header(): JSX.Element {
     const connect = useCallback(async () => {
         // Prepare the wallet connect client
         const client = await WalletConnectClient.init({
-            projectId: "93597220d144218ad2447cb244609aad"
+            projectId: process.env.REACT_APP_WALLETCONNECT_PROJECT_ID,
         });
         // Build the signer
         const walletConnectSigner = new WalletConnectSigner(client, {

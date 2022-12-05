@@ -5,7 +5,7 @@ import {stringifySignDocValues} from "cosmos-wallet";
 import {Buffer} from "buffer";
 import {AuthInfo, SignDoc} from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import {AminoSignResponse, StdSignDoc} from "@cosmjs/amino";
-import {fromBase64} from "@cosmjs/encoding";
+import {fromBase64, toBase64} from "@cosmjs/encoding";
 import {assert} from "@cosmjs/utils";
 import {Signer, SignerStatus, SigningMode} from "@desmoslabs/desmjs";
 import QRCodeModal from "@walletconnect/qrcode-modal";
@@ -113,7 +113,7 @@ export class WalletConnectSigner extends Signer {
       desmos: {
         methods: methods,
         chains: [this.chain],
-        events: ["chainChanged", "accountsChanged"]
+        events: []
       }
     }
 
@@ -129,13 +129,16 @@ export class WalletConnectSigner extends Signer {
         throw new Error("can't get connection uri");
       }
 
+      console.log("Approving...");
       this.walletConnectSession = await approval();
+      console.log("Approved")
 
       // Now it's connected, ask the client the information about the current accounts.
-      const accounts = await this.getAccounts();
-
+      console.log("Get accounts")
+      const accounts = await this.rpcCosmosGetAccounts(this.client, this.walletConnectSession);
+      console.log("WalletConnectSigner.accounts", accounts);
       if (accounts.length > 0) {
-        this.accountData = accounts[0]
+        this.accountData = accounts[0];
       }
 
       this.subscribeToEvents();
@@ -191,18 +194,9 @@ export class WalletConnectSigner extends Signer {
     return this.accountData;
   }
 
-  /**
-   * Implements Signer.
-   *
-   * NOTE: This method might never return anything if the wallet is currently closed, due to the fact that all
-   * WalletConnect requests are asynchronous and complete only when the associated wallet is opened.
-   * If you want to get the currently used account, use `getCurrentAccount` instead.
-   */
-  async getAccounts(): Promise<readonly AccountData[]> {
-    this.assertConnected();
-
-    const result = await this.client.request<object []>({
-      topic: this.walletConnectSession!.topic,
+  async rpcCosmosGetAccounts(client: WalletConnectClient, session: SessionTypes.Struct): Promise<readonly AccountData[]> {
+    const result = await client.request<object []>({
+      topic: session.topic,
       chainId: this.chain,
       request: {
         method: "cosmos_getAccounts",
@@ -217,6 +211,19 @@ export class WalletConnectSigner extends Signer {
         pubkey: fromBase64(accountData.pubkey),
       };
     });
+  }
+
+  /**
+   * Implements Signer.
+   *
+   * NOTE: This method might never return anything if the wallet is currently closed, due to the fact that all
+   * WalletConnect requests are asynchronous and complete only when the associated wallet is opened.
+   * If you want to get the currently used account, use `getCurrentAccount` instead.
+   */
+  async getAccounts(): Promise<readonly AccountData[]> {
+    this.assertConnected();
+
+    return this.rpcCosmosGetAccounts(this.client, this.walletConnectSession!);
   }
 
   /**
@@ -300,5 +307,15 @@ export class WalletConnectSigner extends Signer {
         pub_key: result.pub_key,
       },
     } as AminoSignResponse;
+  }
+
+  public static serializeAccountData(accountData: AccountData[]): any {
+    return accountData.map((account) => {
+      return {
+        address: account.address,
+        algo: account.algo,
+        pubkey: toBase64(account.pubkey),
+      };
+    })
   }
 }
