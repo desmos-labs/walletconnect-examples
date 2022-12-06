@@ -2,36 +2,46 @@ import {OfflineSignerAdapter, Signer, SigningMode} from "@desmoslabs/desmjs";
 import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
 import {DEFAULT_MNEMONIC} from "../consts";
 
-export enum WalletGenerationState {
-  GENERATING,
-  GENERATED,
-  FAILED,
+export enum WalletStatus {
+  NOT_CONNECTED,
+  CONNECTING,
+  CONNECTED,
+  ERROR,
 }
 
-export interface WalletStateGenerated {
-  state: WalletGenerationState.GENERATED,
+export interface WalletStateNotConnected {
+  status: WalletStatus.NOT_CONNECTED,
+}
+
+export interface WalletStateConnected {
+  status: WalletStatus.CONNECTED,
   signer: Signer,
   mnemonic: string,
 }
 
-export interface WalletStateGenerating {
-  state: WalletGenerationState.GENERATING
+export interface WalletStateConnecting {
+  status: WalletStatus.CONNECTING
 }
 
-export interface WalletStateFailed {
-  state: WalletGenerationState.FAILED
+export interface WalletStateError {
+  status: WalletStatus.ERROR
   error: Error
 }
 
-export type WalletState = WalletStateGenerating | WalletStateGenerated | WalletStateFailed
+export type WalletState = WalletStateNotConnected | WalletStateConnecting | WalletStateConnected | WalletStateError;
 
 interface WalletContextState {
-  walletState?: WalletState,
-  generateWallet: (mnemonic: string) => void,
+  walletState: WalletState,
+  connectWallet: (mnemonic: string) => void,
+  disconnectWallet: () => void,
 }
 
 // @ts-ignore
-const initialState: WalletContextState = {}
+const initialState: WalletContextState = {
+  walletState: {
+    status: WalletStatus.NOT_CONNECTED,
+  }
+}
 
 const WalletContext = createContext<WalletContextState>(initialState);
 
@@ -40,35 +50,42 @@ interface Props {
 }
 
 export const WalletContextProvider: React.FC<Props> = ({children}) =>  {
-  const [walletState, setWalletState] = useState<WalletState>()
+  const [walletState, setWalletState] = useState<WalletState>(initialState.walletState)
 
-  const generateWallet = useCallback(async (mnemonic: string) => {
+  const connectWallet = useCallback(async (mnemonic: string) => {
     try {
       setWalletState({
-        state: WalletGenerationState.GENERATING
+        status: WalletStatus.CONNECTING
       });
       const newSigner = await OfflineSignerAdapter.fromMnemonic(SigningMode.DIRECT, mnemonic);
       setWalletState({
-        state: WalletGenerationState.GENERATED,
+        status: WalletStatus.CONNECTED,
         signer: newSigner,
         mnemonic: mnemonic
       });
     } catch (error) {
       setWalletState({
-        state: WalletGenerationState.FAILED,
+        status: WalletStatus.ERROR,
         error: new Error(error)
       })
     }
+  }, []);
+
+  const disconnectWallet = useCallback(() => {
+    setWalletState({
+      status: WalletStatus.NOT_CONNECTED
+    })
   }, [])
 
   useEffect(() => {
-    generateWallet(DEFAULT_MNEMONIC);
+    connectWallet(DEFAULT_MNEMONIC);
   }, [])
 
 
   return <WalletContext.Provider value={{
-    walletState: walletState,
-    generateWallet
+    walletState,
+    connectWallet,
+    disconnectWallet,
   }}>
     {children}
   </WalletContext.Provider>

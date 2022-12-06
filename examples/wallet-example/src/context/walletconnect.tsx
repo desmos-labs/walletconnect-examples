@@ -1,6 +1,6 @@
 import SignClient from "@walletconnect/sign-client";
 import React, {createContext, useContext, useEffect, useState} from "react";
-import {useWalletContext, WalletGenerationState} from "./walletcontext";
+import {useWalletContext, WalletStatus} from "./walletcontext";
 import {SignClientTypes} from "@walletconnect/types";
 import {toBase64} from "@cosmjs/encoding"
 
@@ -22,7 +22,7 @@ export const WalletConnectProvider: React.FC<Props> = ({children}) => {
   const {walletState} = useWalletContext();
 
   useEffect(() => {
-    if (client !== undefined && walletState?.state === WalletGenerationState.GENERATED) {
+    if (client !== undefined && walletState?.status === WalletStatus.CONNECTED) {
       const signer = walletState.signer;
       const listener = async (params: SignClientTypes.EventArguments["session_request"]) => {
         switch (params.params.request.method) {

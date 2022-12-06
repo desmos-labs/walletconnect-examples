@@ -4,7 +4,7 @@ import useWalletConnectPair from "../hooks/useWalletConnectPair";
 import useWalletConnectOnSessionProposal from "../hooks/useWalletConnectSessionProposals";
 import {Button, TextField} from "@mui/material";
 import {SessionProposal, WalletConnectSession} from "./WalletConnectSession";
-import {useWalletContext, WalletGenerationState, WalletStateGenerated} from "../context/walletcontext";
+import {useWalletContext, WalletStatus, WalletStateConnected} from "../context/walletcontext";
 import {SigningMode} from "@desmoslabs/desmjs";
 
 interface Props {
@@ -39,7 +39,7 @@ export const WalletConnectInfo: React.FC<Props> = (props) => {
       return;
     }
 
-    if (walletState?.state !== WalletGenerationState.GENERATED) {
+    if (walletState?.status !== WalletStatus.CONNECTED) {
       rejectSession(session, {
         code: 2,
         message: "Signer not ready"
@@ -49,7 +49,7 @@ export const WalletConnectInfo: React.FC<Props> = (props) => {
 
     // Check if the wallet supports the requested methods
     const walletMethods = ["cosmos_getAccounts"];
-    const signer = (walletState as WalletStateGenerated).signer;
+    const signer = (walletState as WalletStateConnected).signer;
     if (signer.signingMode === SigningMode.AMINO) {
       walletMethods.push("cosmos_signAmino");
     } else if (signer.signingMode === SigningMode.DIRECT) {
