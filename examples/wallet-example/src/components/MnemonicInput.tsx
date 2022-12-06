@@ -2,6 +2,7 @@ import React, {ChangeEvent, useCallback, useEffect, useState} from "react";
 import {useWalletContext, WalletStatus} from "../context/walletcontext";
 import {Button, TextField} from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
+import useWalletClearAllSessions from "../hooks/useWalletClearAllSessions";
 
 export interface Props {
   children?: React.ReactNode
@@ -9,6 +10,7 @@ export interface Props {
 
 export const MnemonicInput: React.FC<Props> = (props) => {
   const {walletState, connectWallet, disconnectWallet} = useWalletContext();
+  const clearAllWalletConnectSessions = useWalletClearAllSessions();
   const [mnemonic, setMnemonic] = useState(walletState?.status === WalletStatus.CONNECTED ? walletState.mnemonic : "");
   const inputEnabled = walletState.status === WalletStatus.NOT_CONNECTED || walletState.status === WalletStatus.ERROR;
   const connecting = walletState.status === WalletStatus.CONNECTING;
@@ -28,11 +30,12 @@ export const MnemonicInput: React.FC<Props> = (props) => {
   const connectDisconnect = useCallback(() => {
     const status = walletState.status;
     if (status === WalletStatus.CONNECTED) {
+      clearAllWalletConnectSessions();
       disconnectWallet();
     } else if (status === WalletStatus.NOT_CONNECTED || status === WalletStatus.ERROR){
       connectWallet(mnemonic);
     }
-  }, [mnemonic, walletState])
+  }, [mnemonic, walletState, clearAllWalletConnectSessions])
 
   return <Grid2 container direction={"column"} alignItems={"center"}>
     <Grid2 xs={12}>

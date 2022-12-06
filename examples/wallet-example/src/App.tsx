@@ -13,9 +13,7 @@ const AppRoot: React.FC = (props) => {
       <MnemonicInput/>
     </Grid2>
     <Grid2 xs={1}>
-      <WalletConnectProvider>
-        <WalletConnectInfo/>
-      </WalletConnectProvider>
+      <WalletConnectInfo/>
     </Grid2>
   </Grid2>
 }
@@ -23,7 +21,9 @@ const AppRoot: React.FC = (props) => {
 export default function App(): JSX.Element {
   return <Grid2 container direction="row" columns={2} margin={4}>
     <WalletContextProvider>
-      <AppRoot/>
+      <WalletConnectProvider>
+        <AppRoot/>
+      </WalletConnectProvider>
     </WalletContextProvider>
   </Grid2>
 }
