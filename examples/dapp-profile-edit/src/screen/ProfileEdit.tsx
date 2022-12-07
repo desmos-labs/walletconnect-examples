@@ -1,32 +1,25 @@
 import React, {useCallback} from "react";
-import {Button, makeStyles, TextField, Theme} from "@material-ui/core";
-import LoadingComponent from "../components/Loading";
+import {Button} from "@material-ui/core";
 import {useDesmosContext} from "../context/desmos";
-import SignClient from "@walletconnect/sign-client";
-import {WalletConnectSigner} from "../signer";
-import {SigningMode} from "@desmoslabs/desmjs";
-
-const useStyles = makeStyles((theme: Theme) => ({
-    root: {
-        '& .MuiTextField-root': {
-            margin: theme.spacing(1),
-        },
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        marginTop: theme.spacing(2)
-    },
-}));
-
-const LoadingTextField = LoadingComponent(TextField);
-const LoadingButton = LoadingComponent(Button);
+import useSignerStatus from "../hooks/useSignerStatus";
 
 export default function ProfileEdit(): JSX.Element {
-    const classes = useStyles();
-    const {signerStatus} = useDesmosContext();
+    const {signer, client} = useDesmosContext();
+    const signerStatus = useSignerStatus();
 
+    const testSign = useCallback(async () => {
+        if (signer !== undefined && client !== undefined) {
+            console.log(client);
+            const accounts = await signer.getAccounts();
+            await client.sendTokens(accounts[0].address, accounts[0].address, [{
+                denom: "udaric",
+                amount: "1000"
+            }], "auto");
+        }
+    }, [signer, client])
 
     return <div>
         <h1>Signer status: {signerStatus}</h1>
+        <Button onClick={testSign}>Test sign</Button>
     </div>
 }

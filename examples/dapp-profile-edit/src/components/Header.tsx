@@ -1,9 +1,8 @@
 import React, {useCallback} from "react";
 import {AppBar, Button, makeStyles, Toolbar, Typography,} from "@material-ui/core";
 import {useDesmosContext} from "../context/desmos";
-import {SignerStatus, SigningMode} from "@desmoslabs/desmjs";
-import WalletConnectClient from "@walletconnect/sign-client";
-import {WalletConnectSigner} from "../signer";
+import {SignerStatus} from "@desmoslabs/desmjs";
+import useSignerStatus from "../hooks/useSignerStatus";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -24,29 +23,8 @@ const useStyles = makeStyles((theme) => ({
 export default function Header(): JSX.Element {
     const classes = useStyles();
     const addresses = "....";
-    const {setSigner, signerStatus, signer} = useDesmosContext();
-
-    const connect = useCallback(async () => {
-        // Prepare the wallet connect client
-        const client = await WalletConnectClient.init({
-            projectId: process.env.REACT_APP_WALLETCONNECT_PROJECT_ID,
-        });
-        // Build the signer
-        const walletConnectSigner = new WalletConnectSigner(client, {
-            chain: "desmos:desmos-mainnet",
-            signingMode: SigningMode.DIRECT
-        })
-        // Init the connection
-        await walletConnectSigner.connect();
-        // Set the signer in the global context
-        setSigner(walletConnectSigner);
-    }, [setSigner])
-
-    const disconnect = useCallback(async () => {
-        if (signer?.status === SignerStatus.Connected) {
-            await signer.disconnect();
-        }
-    }, [signer])
+    const {connect, disconnect} = useDesmosContext();
+    const signerStatus = useSignerStatus();
 
     const onClick = useCallback(() => {
         if (signerStatus === SignerStatus.NotConnected) {

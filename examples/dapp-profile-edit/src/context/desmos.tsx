@@ -1,5 +1,7 @@
-import {DesmosClient, Signer, SignerStatus} from "@desmoslabs/desmjs"
+import {DesmosClient, GasPrice, Signer, SignerStatus, SigningMode} from "@desmoslabs/desmjs"
 import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
+import {useWalletConnectContext} from "./walletconnect";
+import {WalletConnectSigner} from "@desmoslabs/walletconnect";
 
 /**
  * Interface that represents the global desmos state.
@@ -7,15 +9,13 @@ import React, {createContext, useCallback, useContext, useEffect, useState} from
 interface DesmosState {
   client?: DesmosClient
   signer?: Signer,
-  connectError?: Error
-  signerStatus: SignerStatus
-  setSigner: (signer: Signer) => void,
+  signerStatus: SignerStatus,
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
 }
 
 // @ts-ignore
-const initialState: DesmosState = {
-  signerStatus: SignerStatus.NotConnected
-}
+const initialState: DesmosState = {}
 const DesmosContent = createContext<DesmosState>(initialState);
 
 interface Props {
@@ -25,56 +25,86 @@ interface Props {
 
 export const DesmosContextProvider: React.FC<Props> = ({chainEndpoint, children}) =>  {
 
+  const {signClient} = useWalletConnectContext();
+  const [signerStatus, setSignerStatus] = useState(SignerStatus.NotConnected);
+  const [signer, setSigner] = useState<Signer | undefined>();
   const [client, setDesmosClient] = useState<DesmosClient | undefined>();
-  const [signer, updateSigner] = useState<Signer | undefined>();
-  const [connectError, setConnectError] = useState<Error | undefined>();
-  const [signerStatus, setSignerStatus] = useState(initialState.signerStatus);
 
-  // Effect to connect to the provided chain endpoint
+  // Effect to update the signer status
   useEffect(() => {
-    (async () => {
-      try {
-        setConnectError(undefined)
-        const client = await DesmosClient.connect(chainEndpoint);
-        if (signer !== undefined) {
-          client.setSigner(signer);
-        }
-        setDesmosClient(client)
-      } catch (e) {
-        setDesmosClient(undefined);
-        setConnectError(e)
-      }
-    })()
-    // eslint-disable-next-line
-  }, [chainEndpoint]);
-
-  // Function to update the current signer
-  const setSigner = useCallback((signer: Signer) => {
-    if (client !== undefined) {
-      client.setSigner(signer);
-      updateSigner(signer);
-      setSignerStatus(signer.status);
-      signer.addStatusListener(setSignerStatus)
-    }
-  }, [client]);
-
-  // Hook to clean up the status listener after a user change the signer
-  useEffect(() => {
-    return () => {
-      if (signer !== undefined) {
+    if (signer !== undefined) {
+      setSignerStatus(signer.status)
+      signer.addStatusListener(setSignerStatus);
+      return () => {
         signer.removeStatusListener(setSignerStatus);
+        setSignerStatus(SignerStatus.NotConnected);
       }
     }
+
+    return undefined;
+  }, [signer]);
+
+  const connect = useCallback(async () => {
+    if (signClient !== undefined) {
+      const signer = new WalletConnectSigner(signClient, {
+        chain: "desmos:desmos-mainnet",
+        signingMode: SigningMode.DIRECT,
+      });
+      await signer.connect();
+      const desmosClient = await DesmosClient.connectWithSigner(chainEndpoint, signer, {
+        gasPrice: GasPrice.fromString("0.2udaric"),
+      })
+      setDesmosClient(desmosClient);
+      setSigner(signer);
+    } else {
+      throw new Error("can't connect, WalletConnect SignClient not initialized")
+    }
+  }, [signClient, chainEndpoint]);
+
+  const disconnect = useCallback(async () => {
+    if (signer !== undefined) {
+      signer.disconnect();
+    }
+    setDesmosClient(undefined);
+    setSigner(undefined);
   }, [signer])
+
+  useEffect(() => {
+    if (signClient !== undefined && signClient.session.values.length > 0) {
+      (async () => {
+        const session = signClient.session.values[0];
+        console.log("Reloading signer from session...", session);
+
+        const signer = new WalletConnectSigner(signClient, {
+          chain: "desmos:desmos-mainnet",
+          signingMode: SigningMode.DIRECT,
+        });
+        // Connect the signer to the reloaded session
+        await signer.connectToSession(session);
+        setSigner(old => {
+          old?.disconnect();
+          return signer;
+        });
+
+        // Create the new client with the restored signer
+        const desmosClient = await DesmosClient.connectWithSigner(chainEndpoint, signer, {
+          gasPrice: GasPrice.fromString("0.2udaric"),
+        })
+        setDesmosClient(desmosClient);
+
+        console.log("Signer reloaded from session!")
+      })()
+    }
+  }, [signClient, chainEndpoint])
 
   return <DesmosContent.Provider value={{
     client,
-    connectError,
     signer,
     signerStatus,
-    setSigner
+    connect,
+    disconnect
   }}>
-    {client !== undefined ? children : null}
+    {children}
   </DesmosContent.Provider>
 }
 

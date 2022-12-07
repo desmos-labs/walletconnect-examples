@@ -10,6 +10,7 @@
   "dependencies": {
     "@desmoslabs/desmjs": "^4.6.3",
     "@desmoslabs/desmjs-types": "^4.6.3",
+    "@desmoslabs/walletconnect": "file:./../../../desmos-dapp-sdk/packages/walletconnect",
     "@material-ui/core": "4.12.3",
     "@walletconnect/qrcode-modal": "^1.8.0",
     "@walletconnect/sign-client": "^2.1.4",
