@@ -1,2 +1,2 @@
-export const DEFAULT_MNEMONIC = "purchase bundle cradle snow want diesel hazard grocery stock tide gate typical token grocery awesome six attend link extra result tower uniform member mystery";
+export const DEFAULT_MNEMONIC = "hour harbor fame unaware bunker junk garment decrease federal vicious island smile warrior fame right suit portion skate analyst multiply magnet medal fresh sweet";
 

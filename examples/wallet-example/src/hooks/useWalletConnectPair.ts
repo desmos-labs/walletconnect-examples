@@ -1,8 +1,8 @@
 
 import {useCallback} from "react";
-import {useWalletConnect} from "../context/walletconnect";
+import {useWalletConnect} from "../context/WalletConnectContext";
 
-export default function () {
+export default function useWalletConnectPair() {
   const {client} = useWalletConnect();
 
   return useCallback((uri: string) => {

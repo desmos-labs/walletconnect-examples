@@ -1,25 +1,38 @@
 import SignClient from "@walletconnect/sign-client";
 import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
-import {useWalletContext, WalletStatus} from "./walletcontext";
+import {useWalletContext, SignerStatus} from "./SignerContext";
 import {SessionTypes, SignClientTypes} from "@walletconnect/types";
-import {toBase64} from "@cosmjs/encoding"
 import {getSdkError} from "@walletconnect/utils";
 import {ProposalTypes} from "@walletconnect/types/dist/types/sign-client/proposal";
 import {ErrorResponse} from "@walletconnect/jsonrpc-types";
+import {encodeGetAccountsRpcResponse} from "@desmoslabs/walletconnect";
 
 
-interface WalletConnectState {
+interface SessionRequestResponseOk {
+  result: any
+}
+
+interface SessionRequestResponseError {
+  error: ErrorResponse
+}
+
+export type SessionRequestResponse = SessionRequestResponseOk | SessionRequestResponseError;
+
+interface WalletConnectContext {
   client?: SignClient
   sessions: SessionTypes.Struct[],
   sessionProposals: ProposalTypes.Struct[],
+  sessionRequests: SignClientTypes.EventArguments["session_request"][],
   approveSession: (sessionProposal: ProposalTypes.Struct, namespaces: SessionTypes.Namespaces) => void,
   rejectSession: (sessionProposal: ProposalTypes.Struct, reason: ErrorResponse) => void,
   closeSession: (session: SessionTypes.Struct) => void
+  respondToSessionRequest: (sessionRequest: SignClientTypes.EventArguments["session_request"], response: SessionRequestResponse) => void,
 }
 
+
 // @ts-ignore
-const defaultState: WalletConnectState = {}
-const walletConnectContext = createContext<WalletConnectState>(defaultState)
+const defaultState: WalletConnectContext = {}
+const walletConnectContext = createContext<WalletConnectContext>(defaultState)
 
 interface Props {
   children?: React.ReactNode
@@ -29,7 +42,8 @@ export const WalletConnectProvider: React.FC<Props> = ({children}) => {
   const [client, setClient] = useState<SignClient>();
   const [sessions, setSessions] = useState<SessionTypes.Struct[]>([]);
   const [sessionProposals, setSessionProposals] = useState<ProposalTypes.Struct[]>([]);
-  const {walletState} = useWalletContext();
+  const [sessionRequests, setSessionRequests] = useState<SignClientTypes.EventArguments["session_request"][]>([]);
+  const {signerState} = useWalletContext();
 
   // Init client
   useEffect(() => {
@@ -51,6 +65,7 @@ export const WalletConnectProvider: React.FC<Props> = ({children}) => {
         setSessions(client.session.values);
         setSessionProposals(client.proposal.values)
         console.log("Client initialized");
+        console.log("Client sessions", client.session.values);
       } catch (e) {
         console.error("WallettConnectContext", e);
       }
@@ -76,31 +91,31 @@ export const WalletConnectProvider: React.FC<Props> = ({children}) => {
   // Effect to add a listener to the session_request event
   useEffect(() => {
     if (client !== undefined) {
-      const listener = async (params: SignClientTypes.EventArguments["session_request"]) => {
-        if (walletState?.status === WalletStatus.CONNECTED) {
-          const signer = walletState.signer;
-          switch (params.params.request.method) {
+      const listener = async (sessionRequest: SignClientTypes.EventArguments["session_request"]) => {
+        if (signerState?.status === SignerStatus.Connected) {
+          const signer = signerState.signer;
+          switch (sessionRequest.params.request.method) {
             case "cosmos_getAccounts":
               const accounts = await signer.getAccounts();
               client.respond({
-                topic: params.topic,
+                topic: sessionRequest.topic,
                 response: {
-                  id: params.id,
+                  id: sessionRequest.id,
                   jsonrpc: "2.0",
-                  result: accounts.map((account) => ({
-                    address: account.address,
-                    algo: account.algo,
-                    pubkey: toBase64(account.pubkey),
-                  })),
+                  result: encodeGetAccountsRpcResponse(accounts),
                 }
               })
+              break;
+            default:
+              // Add to the requests list
+              setSessionRequests(old => [...old, sessionRequest])
               break;
           }
         } else {
           client.respond({
-            topic: params.topic,
+            topic: sessionRequest.topic,
             response: {
-              id: params.id,
+              id: sessionRequest.id,
               jsonrpc: "2.0",
               error: getSdkError("UNAUTHORIZED_METHOD"),
             }
@@ -109,13 +124,20 @@ export const WalletConnectProvider: React.FC<Props> = ({children}) => {
       }
       client.on("session_request", listener);
 
+      const sessionDeleteListener = (event: SignClientTypes.EventArguments["session_delete"]) => {
+        console.log("Session delete", event);
+        setSessions(client.session.values);
+      }
+      client.on("session_delete", sessionDeleteListener);
+
       return () => {
         client.off("session_request", listener);
+        client.off("session_delete", sessionDeleteListener);
       }
     }
 
     return undefined;
-  }, [walletState, client])
+  }, [signerState, client])
 
   const closeSession = useCallback((session: SessionTypes.Struct) => {
     console.log("Close session", session);
@@ -163,13 +185,31 @@ export const WalletConnectProvider: React.FC<Props> = ({children}) => {
     }
   }, [client]);
 
+  const respondToSessionRequest = useCallback((sessionRequest: SignClientTypes.EventArguments["session_request"], response: SessionRequestResponse) => {
+    if (client !== undefined) {
+      client.respond({
+        topic: sessionRequest.topic,
+        response: {
+          id: sessionRequest.id,
+          jsonrpc: "2.0",
+          ...response
+        }
+      });
+      setSessionRequests(old => {
+        return old.filter(request => request.id !== sessionRequest.id)
+      })
+    }
+  }, [client])
+
   return <walletConnectContext.Provider value={{
     client,
     sessions,
     sessionProposals,
+    sessionRequests,
     approveSession,
     rejectSession,
-    closeSession
+    closeSession,
+    respondToSessionRequest
   }}>
     {children}
   </walletConnectContext.Provider>

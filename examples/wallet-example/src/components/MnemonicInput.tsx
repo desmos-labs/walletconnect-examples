@@ -1,41 +1,38 @@
 import React, {ChangeEvent, useCallback, useEffect, useState} from "react";
-import {useWalletContext, WalletStatus} from "../context/walletcontext";
+import {useWalletContext, SignerStatus} from "../context/SignerContext";
 import {Button, TextField} from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import useWalletClearAllSessions from "../hooks/useWalletClearAllSessions";
 
-export interface Props {
-  children?: React.ReactNode
-}
 
-export const MnemonicInput: React.FC<Props> = (props) => {
-  const {walletState, connectWallet, disconnectWallet} = useWalletContext();
+export const MnemonicInput: React.FC = () => {
+  const {signerState, connectWallet, disconnectWallet} = useWalletContext();
   const clearAllWalletConnectSessions = useWalletClearAllSessions();
-  const [mnemonic, setMnemonic] = useState(walletState?.status === WalletStatus.CONNECTED ? walletState.mnemonic : "");
-  const inputEnabled = walletState.status === WalletStatus.NOT_CONNECTED || walletState.status === WalletStatus.ERROR;
-  const connecting = walletState.status === WalletStatus.CONNECTING;
-  const error = walletState?.status === WalletStatus.ERROR ? walletState.error : undefined;
+  const [mnemonic, setMnemonic] = useState(signerState?.status === SignerStatus.Connected ? signerState.mnemonic : "");
+  const inputEnabled = signerState.status === SignerStatus.NotConnected || signerState.status === SignerStatus.Error;
+  const connecting = signerState.status === SignerStatus.Connecting;
+  const error = signerState?.status === SignerStatus.Error ? signerState.error : undefined;
 
   // Effect to update the mnemonic input when the mnemonic generation completes
   useEffect(() => {
-    if (walletState?.status === WalletStatus.CONNECTED) {
-      setMnemonic(walletState.mnemonic)
+    if (signerState?.status === SignerStatus.Connected) {
+      setMnemonic(signerState.mnemonic)
     }
-  }, [walletState]);
+  }, [signerState]);
 
   const onMnemonicChange = useCallback((e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     setMnemonic(e.target.value);
   }, [])
 
   const connectDisconnect = useCallback(() => {
-    const status = walletState.status;
-    if (status === WalletStatus.CONNECTED) {
+    const status = signerState.status;
+    if (status === SignerStatus.Connected) {
       clearAllWalletConnectSessions();
       disconnectWallet();
-    } else if (status === WalletStatus.NOT_CONNECTED || status === WalletStatus.ERROR){
+    } else if (status === SignerStatus.NotConnected || status === SignerStatus.Error){
       connectWallet(mnemonic);
     }
-  }, [mnemonic, walletState, clearAllWalletConnectSessions])
+  }, [mnemonic, signerState, clearAllWalletConnectSessions, connectWallet, disconnectWallet])
 
   return <Grid2 container direction={"column"} alignItems={"center"}>
     <Grid2 xs={12}>
@@ -55,7 +52,7 @@ export const MnemonicInput: React.FC<Props> = (props) => {
         onClick={connectDisconnect}
         disabled={connecting}
       >
-        {walletState.status === WalletStatus.CONNECTED ? "Disconnect" : "Connect"}
+        {signerState.status === SignerStatus.Connected ? "Disconnect" : "Connect"}
       </Button>
     </Grid2>
   </Grid2>

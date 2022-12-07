@@ -1,22 +1,20 @@
 import React, {useCallback, useMemo, useState} from "react";
-import {useWalletConnect} from "../../context/walletconnect";
+import {useWalletConnect} from "../../context/WalletConnectContext";
 import {SessionTypes} from "@walletconnect/types";
 import {
   Card,
   CardContent,
   CardHeader, Collapse,
-  IconButton, ListItem, ListItemButton,
-  ListItemIcon,
+  IconButton, ListItem,
   ListItemText,
 } from "@mui/material";
 import List from '@mui/material/List';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ClearIcon from '@mui/icons-material/Clear';
-import {ExpandLess, ExpandMore, StarBorder} from "@mui/icons-material";
+import {ExpandLess, ExpandMore} from "@mui/icons-material";
 
 export interface Props {
   sessionProposal: SessionTypes.Struct
-  onClose?: (session: SessionTypes.Struct) => any,
+  onClose: (session: SessionTypes.Struct) => any,
 }
 
 const WalletConnectSession: React.FC<Props> = ({sessionProposal, onClose}) => {
@@ -44,20 +42,21 @@ const WalletConnectSession: React.FC<Props> = ({sessionProposal, onClose}) => {
   }, [sessionProposal.namespaces]);
 
   const onCloseClick = useCallback(() => {
-    if (onClose !== undefined) {
-      onClose(sessionProposal)
-    }
+    onClose(sessionProposal)
   }, [sessionProposal, onClose])
 
 
   return <>
     <ListItem>
-      <ListItemText primary={sessionProposal.self.metadata.name}/>
+      <ListItemText
+        primary={sessionProposal.peer.metadata.name}
+        secondary={sessionProposal.peer.metadata.description}
+      />
       <IconButton onClick={onCloseClick}>
         <ClearIcon/>
       </IconButton>
       <IconButton onClick={handleClick}>
-        {open ? <ExpandLess /> : <ExpandMore />}
+        {open ? <ExpandLess/> : <ExpandMore/>}
       </IconButton>
     </ListItem>
     <Collapse in={open} timeout="auto" unmountOnExit>

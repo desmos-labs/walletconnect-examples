@@ -1,9 +1,9 @@
-import {useWalletConnect} from "../context/walletconnect";
+import {useWalletConnect} from "../context/WalletConnectContext";
 import {useCallback} from "react";
 import {getSdkError} from "@walletconnect/utils";
 
 
-export default function () {
+export default function useWalletClearAllSessions() {
   const {sessionProposals, sessions, rejectSession, closeSession} = useWalletConnect();
 
   return useCallback(() => {

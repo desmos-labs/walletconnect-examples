@@ -8,9 +8,9 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "@cosmjs/encoding": "0.29.4",
     "@desmoslabs/desmjs": "^4.6.3",
     "@desmoslabs/desmjs-types": "^4.6.3",
+    "@desmoslabs/walletconnect": "file:./../../../desmos-dapp-sdk/packages/walletconnect",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.10.16",

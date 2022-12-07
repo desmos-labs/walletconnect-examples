@@ -1,4 +1,4 @@
-import {useWalletConnect} from "../context/walletconnect";
+import {useWalletConnect} from "../context/WalletConnectContext";
 
 
 export default function () {

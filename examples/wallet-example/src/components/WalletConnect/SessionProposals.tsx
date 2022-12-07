@@ -1,11 +1,11 @@
 import React, {useCallback, useMemo, useState} from "react";
-import {useWalletConnect} from "../../context/walletconnect";
+import {useWalletConnect} from "../../context/WalletConnectContext";
 import {ProposalTypes} from "@walletconnect/types";
 import {
   Card,
   CardContent,
   CardHeader, Collapse,
-  IconButton, ListItem, ListItemButton,
+  IconButton, ListItem,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
@@ -14,7 +14,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoneIcon from '@mui/icons-material/Done';
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
-import {useWalletContext, WalletStateConnected, WalletStatus} from "../../context/walletcontext";
+import {useWalletContext, SignerStateConnected, SignerStatus} from "../../context/SignerContext";
 import {getSdkError} from "@walletconnect/utils";
 import {SigningMode} from "@desmoslabs/desmjs";
 
@@ -86,7 +86,7 @@ const WalletConnectSessionProposal: React.FC<Props> = ({sessionProposal, approve
 
 export const WalletConnectSessionProposals: React.FC = () => {
   const {sessionProposals, rejectSession, approveSession} = useWalletConnect()
-  const {walletState} = useWalletContext()
+  const {signerState} = useWalletContext()
 
   const onApproveSession = useCallback(async (sessionProposal: ProposalTypes.Struct) => {
     const desmosNamespace = sessionProposal.requiredNamespaces['desmos'];
@@ -95,13 +95,13 @@ export const WalletConnectSessionProposals: React.FC = () => {
       return;
     }
 
-    if (walletState?.status !== WalletStatus.CONNECTED) {
+    if (signerState?.status !== SignerStatus.Connected) {
       rejectSession(sessionProposal, getSdkError("UNSUPPORTED_METHODS"))
     }
 
     // Check if the wallet supports the requested methods
     const walletMethods = ["cosmos_getAccounts"];
-    const signer = (walletState as WalletStateConnected).signer;
+    const signer = (signerState as SignerStateConnected).signer;
     if (signer.signingMode === SigningMode.AMINO) {
       walletMethods.push("cosmos_signAmino");
     } else if (signer.signingMode === SigningMode.DIRECT) {
@@ -130,7 +130,7 @@ export const WalletConnectSessionProposals: React.FC = () => {
         events: [],
       }
     });
-  }, [approveSession, walletState]);
+  }, [approveSession, rejectSession, signerState]);
 
   const onRejectSession = useCallback((sessionProposal: ProposalTypes.Struct) => {
     rejectSession(sessionProposal, getSdkError("USER_REJECTED"));
