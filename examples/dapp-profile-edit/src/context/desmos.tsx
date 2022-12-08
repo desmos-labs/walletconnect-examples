@@ -1,17 +1,17 @@
 import {DesmosClient, GasPrice, Signer, SignerStatus, SigningMode} from "@desmoslabs/desmjs"
 import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
 import {useWalletConnectContext} from "./walletconnect";
-import {WalletConnectSigner} from "@desmoslabs/walletconnect";
+import {WalletConnectSigner} from "@desmoslabs/desmjs-walletconnect";
 
 /**
  * Interface that represents the global desmos state.
  */
 interface DesmosState {
-  client?: DesmosClient
+  client?: DesmosClient,
   signer?: Signer,
   signerStatus: SignerStatus,
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
+  connect: () => Promise<void>,
+  disconnect: () => Promise<void>,
 }
 
 // @ts-ignore
