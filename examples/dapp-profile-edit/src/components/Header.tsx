@@ -1,6 +1,7 @@
 import React, {useCallback} from "react";
 import {AppBar, Button, makeStyles, Toolbar, Typography,} from "@material-ui/core";
 import {useDesmosContext} from "../context/desmos";
+import {useWalletConnectContext} from "../context/walletconnect";
 import {SignerStatus} from "@desmoslabs/desmjs";
 import useSignerStatus from "../hooks/useSignerStatus";
 
@@ -24,6 +25,7 @@ export default function Header(): JSX.Element {
     const classes = useStyles();
     const addresses = "....";
     const {connect, disconnect} = useDesmosContext();
+    const {signClient} = useWalletConnectContext();
     const signerStatus = useSignerStatus();
 
     const onClick = useCallback(() => {
@@ -34,7 +36,8 @@ export default function Header(): JSX.Element {
         }
     }, [signerStatus, connect, disconnect]);
 
-    const connectDisabled = signerStatus !== SignerStatus.Connected && signerStatus !== SignerStatus.NotConnected;
+    const connectDisabled = signClient === undefined ||
+      (signerStatus !== SignerStatus.Connected && signerStatus !== SignerStatus.NotConnected);
 
     return <div className={classes.root}>
         <AppBar position="static">
