@@ -10,7 +10,7 @@
   "dependencies": {
     "@desmoslabs/desmjs": "^4.6.3",
     "@desmoslabs/desmjs-types": "^4.6.3",
-    "@desmoslabs/desmjs-walletconnect": "file:./../../../desmos-dapp-sdk/packages/walletconnect",
+    "@desmoslabs/desmjs-walletconnect-v2": "file:./../../../desmos-dapp-sdk/packages/walletconnect-v2",
     "@material-ui/core": "4.12.3",
     "@walletconnect/qrcode-modal": "^1.8.0",
     "@walletconnect/sign-client": "^2.1.4",
@@ -18,11 +18,11 @@
     "@walletconnect/utils": "^2.1.4",
     "crypto-browserify": "^3.12.0",
     "glob": "^8.0.3",
-    "react": "^18.2.0",
-    "stream-browserify": "^3.0.0",
     "path-browserify": "^1.0.1",
+    "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "^5.0.1",
+    "stream-browserify": "^3.0.0",
     "web-vitals": "^3.1.0",
     "webpack": "^5.75.0"
   },

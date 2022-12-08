@@ -1,7 +1,7 @@
 import {DesmosClient, GasPrice, Signer, SignerStatus, SigningMode} from "@desmoslabs/desmjs"
 import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
 import {useWalletConnectContext} from "./walletconnect";
-import {WalletConnectSigner} from "@desmoslabs/desmjs-walletconnect";
+import {QRCodeModal, WalletConnectSigner} from "@desmoslabs/desmjs-walletconnect-v2";
 
 /**
  * Interface that represents the global desmos state.
@@ -49,6 +49,7 @@ export const DesmosContextProvider: React.FC<Props> = ({chainEndpoint, children}
       const signer = new WalletConnectSigner(signClient, {
         chain: "desmos:desmos-mainnet",
         signingMode: SigningMode.DIRECT,
+        qrCodeModalController: QRCodeModal,
       });
       await signer.connect();
       const desmosClient = await DesmosClient.connectWithSigner(chainEndpoint, signer, {

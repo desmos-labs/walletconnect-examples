@@ -1390,7 +1390,7 @@
     long "^4.0.0"
     protobufjs "^7.1.2"
 
-"@desmoslabs/desmjs-walletconnect@file:../../../desmos-dapp-sdk/packages/walletconnect":
+"@desmoslabs/desmjs-walletconnect-v2@file:./../../../desmos-dapp-sdk/packages/walletconnect-v2":
   version "4.6.3"
   dependencies:
     "@cosmjs/amino" "^0.29.4"

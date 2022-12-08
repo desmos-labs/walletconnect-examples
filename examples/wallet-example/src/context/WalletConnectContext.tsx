@@ -5,7 +5,7 @@ import {SessionTypes, SignClientTypes} from "@walletconnect/types";
 import {getSdkError} from "@walletconnect/utils";
 import {ProposalTypes} from "@walletconnect/types/dist/types/sign-client/proposal";
 import {ErrorResponse} from "@walletconnect/jsonrpc-types";
-import {encodeGetAccountsRpcResponse} from "@desmoslabs/desmjs-walletconnect";
+import {encodeGetAccountsRpcResponse} from "@desmoslabs/desmjs-walletconnect-v2";
 
 
 interface SessionRequestResponseOk {

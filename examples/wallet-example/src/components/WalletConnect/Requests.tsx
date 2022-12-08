@@ -12,7 +12,7 @@ import {
   decodeDirectSignRpcRequestParams,
   decodeAminoSignRpcRequestParams,
   encodeDirectSignRpcResponse, encodeAminoSignRpcResponse
-} from "@desmoslabs/desmjs-walletconnect"
+} from "@desmoslabs/desmjs-walletconnect-v2"
 
 export interface Props {
   sessionRequest: SignClientTypes.EventArguments["session_request"]
