@@ -1,4 +1,4 @@
-import React, {useCallback} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {AppBar, Button, makeStyles, Toolbar, Typography,} from "@material-ui/core";
 import {useDesmosContext} from "../context/desmos";
 import {useWalletConnectContext} from "../context/walletconnect";
@@ -23,8 +23,8 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Header(): JSX.Element {
     const classes = useStyles();
-    const addresses = "....";
-    const {connect, disconnect} = useDesmosContext();
+    const [address, setAddress] = useState("")
+    const {connect, disconnect, signer} = useDesmosContext();
     const {signClient} = useWalletConnectContext();
     const signerStatus = useSignerStatus();
 
@@ -36,6 +36,16 @@ export default function Header(): JSX.Element {
         }
     }, [signerStatus, connect, disconnect]);
 
+    useEffect(() => {
+        if (signer !== undefined && signerStatus === SignerStatus.Connected) {
+            signer.getAccounts().then(accounts => {
+                setAddress(accounts[0].address);
+            })
+        } else {
+            setAddress("");
+        }
+    }, [signerStatus])
+
     const connectDisabled = signClient === undefined ||
       (signerStatus !== SignerStatus.Connected && signerStatus !== SignerStatus.NotConnected);
 
@@ -45,11 +55,9 @@ export default function Header(): JSX.Element {
                 <Typography variant="h6" className={classes.title}>
                     Profile Manager
                 </Typography>
-                {addresses !== undefined &&
-                <Typography variant="h6" hidden={addresses.length === 0} className={classes.address}>
-                    {addresses![0]}
+                <Typography variant="h6" hidden={signerStatus !== SignerStatus.Connected} className={classes.address}>
+                    {address}
                 </Typography>
-                }
                 <Button color="inherit" onClick={onClick} disabled={connectDisabled}>
                     {signerStatus === SignerStatus.Connected ? "Disconnect" : "Connect"}
                 </Button>
