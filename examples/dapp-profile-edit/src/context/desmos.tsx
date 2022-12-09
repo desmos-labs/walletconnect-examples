@@ -2,6 +2,7 @@ import {DesmosClient, GasPrice, Signer, SignerStatus, SigningMode} from "@desmos
 import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
 import {useWalletConnectContext} from "./walletconnect";
 import {QRCodeModal, WalletConnectSigner} from "@desmoslabs/desmjs-walletconnect-v2";
+import {SessionTypes} from "@walletconnect/types";
 
 /**
  * Interface that represents the global desmos state.
@@ -44,19 +45,32 @@ export const DesmosContextProvider: React.FC<Props> = ({chainEndpoint, children}
     return undefined;
   }, [signer]);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (session?: SessionTypes.Struct) => {
     if (signClient !== undefined) {
       const signer = new WalletConnectSigner(signClient, {
         chain: "desmos:desmos-mainnet",
         signingMode: SigningMode.DIRECT,
         qrCodeModalController: QRCodeModal,
       });
-      await signer.connect();
+
+      setSigner(oldSigner => {
+        if (oldSigner !== undefined) {
+          oldSigner.disconnect();
+        }
+        return signer;
+      });
+
+      // A Session has been provided, connect to the provided session.
+      if (session !== undefined) {
+        await signer.connectToSession(session)
+      } else {
+        await signer.connect();
+      }
+      // Initialize the client with the new signer.
       const desmosClient = await DesmosClient.connectWithSigner(chainEndpoint, signer, {
         gasPrice: GasPrice.fromString("0.2udaric"),
       })
       setDesmosClient(desmosClient);
-      setSigner(signer);
     } else {
       throw new Error("can't connect, WalletConnect SignClient not initialized")
     }
@@ -72,31 +86,11 @@ export const DesmosContextProvider: React.FC<Props> = ({chainEndpoint, children}
 
   useEffect(() => {
     if (signClient !== undefined && signClient.session.values.length > 0) {
-      (async () => {
-        const session = signClient.session.values[0];
-        console.log("Reloading signer from session...", session);
-
-        const signer = new WalletConnectSigner(signClient, {
-          chain: "desmos:desmos-mainnet",
-          signingMode: SigningMode.DIRECT,
-        });
-        // Connect the signer to the reloaded session
-        await signer.connectToSession(session);
-        setSigner(old => {
-          old?.disconnect();
-          return signer;
-        });
-
-        // Create the new client with the restored signer
-        const desmosClient = await DesmosClient.connectWithSigner(chainEndpoint, signer, {
-          gasPrice: GasPrice.fromString("0.2udaric"),
-        })
-        setDesmosClient(desmosClient);
-
-        console.log("Signer reloaded from session!")
-      })()
+      const session = signClient.session.values[0];
+      console.log("Reloading signer from session...", session);
+      connect(session);
     }
-  }, [signClient, chainEndpoint])
+  }, [signClient, connect]);
 
   return <DesmosContent.Provider value={{
     client,

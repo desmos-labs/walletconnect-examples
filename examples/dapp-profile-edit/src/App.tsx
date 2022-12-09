@@ -1,28 +1,19 @@
 import React from "react";
 import ProfileEdit from "./screen/ProfileEdit";
 import Header from "./components/Header";
-import {Container, makeStyles} from "@material-ui/core";
 import {DesmosContextProvider} from "./context/desmos";
 import {WalletConnectContextProvider} from "./context/walletconnect";
-
-const useStyle = makeStyles(theme => {
-  return {
-    root: {
-      display: "flex",
-      flexDirection: "column",
-      flexGrow: 1,
-    }
-  }
-})
+import Grid2 from "@mui/material/Unstable_Grid2";
 
 const AppRoot: React.FC = (props) => {
-  const classes = useStyle();
-  return <div className={classes.root}>
-    <Header/>
-    <Container>
+  return <Grid2 container direction="column" spacing={2}>
+    <Grid2>
+      <Header/>
+    </Grid2>
+    <Grid2>
       <ProfileEdit/>
-    </Container>
-  </div>
+    </Grid2>
+  </Grid2>
 }
 
 export default function App(): JSX.Element {
