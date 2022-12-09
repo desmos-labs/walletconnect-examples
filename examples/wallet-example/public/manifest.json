@@ -1,6 +1,6 @@
 {
-  "short_name": "Desmos React SDK Demo",
-  "name": "Desmos React SDK Demo",
+  "short_name": "Desmos WalletConnect example Wallet",
+  "name": "Desmos WalletConnect example Wallet",
   "icons": [
     {
       "src": "favicon.ico",
