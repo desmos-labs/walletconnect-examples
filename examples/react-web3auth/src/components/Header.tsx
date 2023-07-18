@@ -25,7 +25,7 @@ export default function Header(): JSX.Element {
     } else {
       setAddress("");
     }
-  }, [signerStatus])
+  }, [signerStatus, signer])
 
   const connectDisabled = signerStatus !== SignerStatus.Connected && signerStatus !== SignerStatus.NotConnected;
 

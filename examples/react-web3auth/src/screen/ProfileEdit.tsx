@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Alert, Button, Skeleton, Snackbar, Typography} from "@mui/material";
-import {MsgSaveProfileEncodeObject, SignerStatus} from "@desmoslabs/desmjs";
+import {Profiles, SignerStatus} from "@desmoslabs/desmjs";
 import {Profile} from "@desmoslabs/desmjs-types/desmos/profiles/v3/models_profile";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import {ProfileViewer} from "../components/Profile";
@@ -50,7 +50,7 @@ export default function ProfileEdit(): JSX.Element {
     if (signerStatus === SignerStatus.NotConnected) {
       setProfileState({status: ProfileStatus.None});
     }
-  }, [signer, signer?.status])
+  }, [signerStatus, signer, signer?.status])
 
   useEffect(() => {
     if (desmosClient !== undefined && signer !== undefined && signerStatus === SignerStatus.Connected) {
@@ -86,7 +86,7 @@ export default function ProfileEdit(): JSX.Element {
         const accounts = await signer.getAccounts();
         const creator = accounts[0].address;
         await desmosClient.signAndBroadcast(creator, [{
-          typeUrl: "/desmos.profiles.v3.MsgSaveProfile",
+          typeUrl: Profiles.v3.MsgSaveProfileTypeUrl,
           value: {
             dtag: profile.dtag,
             bio: profile.bio,
@@ -95,7 +95,7 @@ export default function ProfileEdit(): JSX.Element {
             coverPicture: profile?.pictures?.cover ?? "",
             creator
           }
-        } as MsgSaveProfileEncodeObject], "auto");
+        } as Profiles.v3.MsgSaveProfileEncodeObject], "auto");
         setShowProfileSaved(true);
       } catch (e) {
         console.error("Profile save error", e);
@@ -105,7 +105,7 @@ export default function ProfileEdit(): JSX.Element {
         console.log("Profile save finished")
       }
     }
-  }, [signer, desmosClient, profile, profileState]);
+  }, [signer, desmosClient, profile]);
 
   const profileEditor = useMemo(() => {
     switch (profileState.status) {
@@ -168,7 +168,7 @@ export default function ProfileEdit(): JSX.Element {
           Fetch profile error {profileState.error}
         </Typography>
     }
-  }, [profileState.status, saveProfile, savingProfile, saveProfileError])
+  }, [signer?.status, profileState, saveProfile, savingProfile, saveProfileError])
 
   return <Grid2
     container
