@@ -98,9 +98,11 @@ export default function ProfileEdit(): JSX.Element {
           }
         } as Profiles.v3.MsgSaveProfileEncodeObject], "auto");
         setShowProfileSaved(true);
+        alert("Profile saved");
       } catch (e) {
         console.error("Profile save error", e);
         setSaveProfileError(e.message);
+        alert(e);
       } finally {
         setSavingProfile(false)
         console.log("Profile save finished")
