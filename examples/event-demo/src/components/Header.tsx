@@ -1,20 +1,26 @@
-import React, {useCallback, useEffect, useState} from "react";
-import {AppBar, Button, Toolbar, Typography,} from "@mui/material";
-import {useSignerContext} from "../context/signer";
+import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { AppBar, Button, Toolbar, Typography, } from "@mui/material";
+import { useSignerContext } from "../context/signer";
 import useSignerStatus from "../hooks/useSignerStatus";
-import {SignerStatus} from "@desmoslabs/desmjs";
+import { SignerStatus } from "@desmoslabs/desmjs";
+import { useRouter } from 'next/router'
 
 export default function Header(): JSX.Element {
-  const {connect, disconnect, signer} = useSignerContext();
+  const { connect, disconnect, signer } = useSignerContext();
   const signerStatus = useSignerStatus();
   const [address, setAddress] = useState("");
+  const router = useRouter();
 
-  const onClick = useCallback(() => {
+  const onForum = () => {router.push('/forum');};
+
+  const onConnect = useCallback(() => {
     if (signerStatus === SignerStatus.Connected) {
       disconnect();
     } else if (signerStatus === SignerStatus.NotConnected) {
       connect();
     }
+    router.push('/profile');
   }, [connect, disconnect, signerStatus]);
 
   useEffect(() => {
@@ -27,21 +33,21 @@ export default function Header(): JSX.Element {
     }
   }, [signerStatus, signer])
 
-  const connectDisabled = signerStatus !== SignerStatus.Connected && signerStatus !== SignerStatus.NotConnected;
-
   return <AppBar position="static">
     <Toolbar>
-      <Typography variant="h6" sx={{mr: 2}}>
-        Desmos Demo
-      </Typography>
+      <Button color="inherit" onClick={onForum}>
+        <Typography variant="h6" sx={{ mr: 2 }}>
+          Desmos Demo Forum
+        </Typography>
+      </Button>
       <Typography
         variant="caption"
         component="div"
-        sx={{flexGrow: 1, textAlign: "end"}}
+        sx={{ flexGrow: 1, textAlign: "end" }}
       >
         {address}
       </Typography>
-      <Button color="inherit" onClick={onClick} disabled={connectDisabled}>
+      <Button color="inherit" onClick={onConnect} disabled={signerStatus !== SignerStatus.Connected && signerStatus !== SignerStatus.NotConnected}>
         {signerStatus === SignerStatus.Connected ? "Disconnect" : "Connect"}
       </Button>
     </Toolbar>

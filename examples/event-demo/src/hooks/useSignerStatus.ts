@@ -4,10 +4,10 @@ import {SignerStatus} from "@desmoslabs/desmjs";
 
 export default function useSignerStatus() {
   const {signer} = useSignerContext();
-  const [signerStatus, setSignerStatus] = useState(SignerStatus.NotConnected);
+  const [signerStatus, setSignerStatus] = useState(!signer ? SignerStatus.NotConnected : signer.status);
 
   useEffect(() => {
-    if (signer === undefined) {
+    if (signer === undefined ) {
       setSignerStatus(SignerStatus.NotConnected);
       return undefined;
     } else {

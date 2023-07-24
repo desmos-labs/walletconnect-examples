@@ -9,7 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import {SignerStatus} from "@desmoslabs/desmjs";
 import {DesmosClient, GasPrice} from "@desmoslabs/desmjs";
 
-import useSignerClient from "../../hooks/useSignerClient";
+import useDesmosClient from "../../hooks/useDesmosClient";
 import {Post} from "../../components/Post";
 import {useSignerContext} from "../../context/signer";
 import useSignerStatus from "../../hooks/useSignerStatus";
@@ -18,10 +18,10 @@ import Long from "long";
 
 export default function Forum() : JSX.Element {
   const signerStatus = useSignerStatus();
-  const signerClient = useSignerClient();
+  const signerClient = useDesmosClient();
   
   const { data, isLoading, isError, isSuccess } = useQuery(
-    "posts",
+    "profile",
     async() => {
       let client: DesmosClient;
       if (signerClient !== undefined) {
@@ -57,8 +57,8 @@ export default function Forum() : JSX.Element {
       {isLoading && <div>Loading...</div>}
       {isError && <div>Fetching error</div>}
       {isSuccess && data === undefined && <div>Empty</div>}
-      {isSuccess && data !== undefined && data.posts.map((post) => {
-          return <Post dtag={post.author} content={post.text} />
+      {isSuccess && data !== undefined && data.posts.map((post, key) => {
+          return <Post key={key} user={post.author} content={post.text} />
         })
       }
      </List>

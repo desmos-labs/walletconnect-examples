@@ -1,4 +1,4 @@
-import {Signer, SigningMode} from "@desmoslabs/desmjs";
+import {Signer, SigningMode, PrivateKey, PrivateKeySigner} from "@desmoslabs/desmjs";
 import {OpenloginAdapter} from "@web3auth/openlogin-adapter";
 import React, {createContext, useCallback, useContext, useState} from "react";
 import {web3AuthSigner} from "../utils/keyprovider";
@@ -10,14 +10,20 @@ export interface SignerContext {
 }
 
 // @ts-ignore
-const signerContext = createContext<SignerContext>({})
+const SignerContext = createContext<SignerContext>({})
 
 interface Props {
   children?: React.ReactNode
 }
 
 export const SignerContextProvider: React.FC<Props> = ({children}) => {
-  const [signer, setSigner] = useState<Signer>()
+  const keyInStorage = typeof window !== "undefined" ? window.sessionStorage.getItem("key") : null;
+  const defaultSigner = !keyInStorage ? undefined: PrivateKeySigner.fromSecp256k1(keyInStorage, SigningMode.DIRECT, { prefix: "desmos" });
+  const [signer, setSigner] = useState<Signer | undefined >(defaultSigner)
+
+  if (defaultSigner){
+    defaultSigner.connect().then(()=> setSigner(defaultSigner));
+  }
 
   const connect = useCallback(async () => {
     const openloginAdapter = new OpenloginAdapter({
@@ -34,7 +40,7 @@ export const SignerContextProvider: React.FC<Props> = ({children}) => {
 
     const signer = web3AuthSigner(SigningMode.DIRECT, {
       authMode: "DAPP",
-      clientId: process.env.REACT_APP_WEB3AUTH_CLIENT_ID!,
+      clientId: process.env.NEXT_PUBLIC_APP_WEB3AUTH_CLIENT_ID!,
       chainConfig: {
         chainNamespace: "other",
         blockExplorer: "https://morpheus.desmos.network",
@@ -42,32 +48,35 @@ export const SignerContextProvider: React.FC<Props> = ({children}) => {
         chainId: "morpheus-apollo-3",
         ticker: "DSM",
         tickerName: "Desmos",
+        rpcTarget: "https://rpc.morpheus.desmos.network",
       }
     }, {
        adapters: [openloginAdapter]
     });
 
     setSigner(signer);
-    return signer.connect();
+
+    return signer.connect().then(() => sessionStorage.setItem("key", Buffer.from(signer.privateKey.key).toString("hex")));
   }, []);
 
   const disconnect = useCallback(async () => {
     if (signer !== undefined) {
+      sessionStorage.removeItem("key");
       setSigner(undefined);
       await signer.disconnect()
     }
   }, [signer]);
 
-  return <signerContext.Provider value={{
+  return <SignerContext.Provider value={{
     signer,
     connect,
     disconnect
   }}
   >
     {children}
-  </signerContext.Provider>
+  </SignerContext.Provider>
 }
 
 export function useSignerContext(): SignerContext {
-  return useContext(signerContext);
+  return useContext(SignerContext);
 }

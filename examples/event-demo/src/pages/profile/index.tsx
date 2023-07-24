@@ -8,7 +8,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 
 import {useSignerContext} from "../../context/signer";
 import useSignerStatus from "../../hooks/useSignerStatus";
-import useSignerClient from "../../hooks/useSignerClient";
+import useDesmosClient from "../../hooks/useDesmosClient";
 
 enum ProfileStatus {
   None,
@@ -40,7 +40,7 @@ type ProfileState = ProfileNone | ProfileFetching | ProfileFetchError | ProfileF
 export default function ProfileEdit(): JSX.Element {
   const {signer} = useSignerContext();
   const signerStatus = useSignerStatus();
-  const signerClient = useSignerClient();
+  const client = useDesmosClient();
   const [profileState, setProfileState] = useState<ProfileState>({status: ProfileStatus.None});
   const [profile, setProfile] = useState<Profile | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -54,15 +54,15 @@ export default function ProfileEdit(): JSX.Element {
   }, [signerStatus, signer, signer?.status])
 
   useEffect(() => {
-    if (signerClient !== undefined && signer !== undefined && signerStatus === SignerStatus.Connected) {
+    if (client !== undefined && signer !== undefined && signerStatus === SignerStatus.Connected) {
       (async () => {
         try {
           setSaveProfileError(undefined);
           setProfileState({
             status: ProfileStatus.Fetching
           });
-          const accounts = await signer.getAccounts();
-          const profile = await signerClient.getProfile(accounts[0].address);
+          const accounts = await signer!.getAccounts();
+          const profile = await client.getProfile(accounts[0].address);
           setProfileState({
             status: ProfileStatus.Fetched,
             profile,
@@ -76,17 +76,17 @@ export default function ProfileEdit(): JSX.Element {
         }
       })()
     }
-  }, [signerClient, signer, signerStatus])
+  }, [client, signer, signerStatus])
 
   const saveProfile = useCallback(async () => {
-    if (signer !== undefined && signerClient !== undefined && profile !== null) {
+    if (signer !== undefined && client !== undefined && profile !== null) {
       try {
         console.log("Saving profile...")
         setSavingProfile(true)
         setSaveProfileError(undefined);
         const accounts = await signer.getAccounts();
         const creator = accounts[0].address;
-        await signerClient.signAndBroadcast(creator, [{
+        await client.signAndBroadcast(creator, [{
           typeUrl: Profiles.v3.MsgSaveProfileTypeUrl,
           value: {
             dtag: profile.dtag,
@@ -106,7 +106,7 @@ export default function ProfileEdit(): JSX.Element {
         console.log("Profile save finished")
       }
     }
-  }, [signer, signerClient, profile]);
+  }, [signer, client, profile]);
 
   const profileEditor = useMemo(() => {
     switch (profileState.status) {
@@ -170,12 +170,12 @@ export default function ProfileEdit(): JSX.Element {
           Fetch profile error {profileState.error}
         </Typography>
     }
-  }, [signer?.status, profileState, saveProfile, savingProfile, saveProfileError])
+  }, [signer, profileState, saveProfile, savingProfile, saveProfileError])
 
   return <Grid2
+    sx={{m: 2}}
     container
     direction={"column"}
-    spacing={1}
     alignItems={"center"}
   >
     {profileEditor}
