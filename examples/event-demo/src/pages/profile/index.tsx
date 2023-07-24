@@ -86,7 +86,7 @@ export default function ProfileEdit(): JSX.Element {
         setSaveProfileError(undefined);
         const accounts = await signer.getAccounts();
         const creator = accounts[0].address;
-        await client.signAndBroadcast(creator, [{
+        const response = await client.signAndBroadcast(creator, [{
           typeUrl: Profiles.v3.MsgSaveProfileTypeUrl,
           value: {
             dtag: profile.dtag,
@@ -98,7 +98,7 @@ export default function ProfileEdit(): JSX.Element {
           }
         } as Profiles.v3.MsgSaveProfileEncodeObject], "auto");
         setShowProfileSaved(true);
-        alert("Profile saved");
+        alert(`Profile saved:\nhttps://testnet.bigdipper.live/desmos/transactions/${response.transactionHash}`);
       } catch (e) {
         console.error("Profile save error", e);
         setSaveProfileError(e.message);

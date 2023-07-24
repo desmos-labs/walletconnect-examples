@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { AppBar, Button, Toolbar, Typography, } from "@mui/material";
 import { useSignerContext } from "../context/signer";
 import useSignerStatus from "../hooks/useSignerStatus";
@@ -37,7 +36,7 @@ export default function Header(): JSX.Element {
     <Toolbar>
       <Button color="inherit" onClick={onForum}>
         <Typography variant="h6" sx={{ mr: 2 }}>
-          Desmos Demo Forum
+          Demo Forum
         </Typography>
       </Button>
       <Typography

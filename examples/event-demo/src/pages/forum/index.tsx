@@ -17,7 +17,6 @@ import { useSignerContext } from "../../context/signer";
 import useSignerStatus from "../../hooks/useSignerStatus";
 
 import Long from "long";
-import { Router } from "react-router-dom";
 import { LoadingButton } from "@mui/lab";
 
 export default function Forum(): JSX.Element {
@@ -31,7 +30,13 @@ export default function Forum(): JSX.Element {
   const { data, isLoading, isError, isSuccess } = useQuery(
     "profile",
     async () => {
-      return await client!.querier.postsV3.subspacePosts(Long.fromValue(15));
+      return await client!.querier.postsV3.subspacePosts(Long.fromValue(15), {
+        key: new Uint8Array(),
+        limit: Long.fromValue(20), 
+        offset: Long.fromValue(0),
+        reverse: true,
+        countTotal: false
+      });
     },
     {
       enabled: !!client,
@@ -43,7 +48,7 @@ export default function Forum(): JSX.Element {
     const creator = accounts[0].address;
     setCreatingPost(true)
     try {
-      await client!.signAndBroadcast(creator, [{
+      const res = await client!.signAndBroadcast(creator, [{
         typeUrl: Posts.v3.MsgCreatePostTypeUrl,
         value: {
           subspaceId: Long.fromValue(15),
@@ -58,6 +63,7 @@ export default function Forum(): JSX.Element {
           referencedPosts: [],
         }
       } as Posts.v3.MsgCreatePostEncodeObject], "auto");
+      alert(`Post created:\nhttps://testnet.bigdipper.live/desmos/transactions/${res.transactionHash}`)
       router.reload()
     } catch (e) {
       alert(e);
