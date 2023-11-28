@@ -1,6 +1,5 @@
-import SignClient from "@walletconnect/sign-client";
 import React, {createContext, useContext, useEffect, useState} from "react";
-import WalletConnectClient from "@walletconnect/sign-client";
+import { SignClient } from "@desmoslabs/desmjs-walletconnect-v2";
 
 interface WalletConnectContext {
   signClient?: SignClient
@@ -22,7 +21,7 @@ export const WalletConnectContextProvider: React.FC<Props> = ({children}) =>  {
     (async () => {
       console.log("Initializing WalletConnect SignClient...")
       try {
-        const client = await WalletConnectClient.init({
+        const client = await SignClient.init({
           projectId: process.env.REACT_APP_WALLETCONNECT_PROJECT_ID,
         });
         console.log("WalletConnect SignClient initialized!")

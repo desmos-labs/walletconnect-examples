@@ -48,7 +48,7 @@ export const DesmosContextProvider: React.FC<Props> = ({chainEndpoint, children}
   const connect = useCallback(async (session?: SessionTypes.Struct) => {
     if (signClient !== undefined) {
       const signer = new WalletConnectSigner(signClient, {
-        chain: "desmos:desmos-mainnet",
+        chain: "desmos:morpheus-apollo-3",
         signingMode: SigningMode.AMINO,
         qrCodeModalController: QRCodeModal,
       });
